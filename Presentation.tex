@@ -1,0 +1,1223 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Configure File %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass{beamer}
+%\documentclass[serif]{beamer} % For serif latex font
+\usepackage{lmodern}
+\usetheme{Boadilla}
+\usepackage{upquote}
+%\usetheme{Frankfurt}
+
+% Set up the colors to use with "alerted" text
+% --> See the slide "Highlighting Certain Points?"
+\setbeamercolor{dull text}{fg=gray, bg=}
+\setbeamercolor{alerted text}{fg=black, bg=}
+
+\usepackage{courier}
+\usepackage{color}
+\definecolor{codegreen}{RGB}{28,172,0}
+\definecolor{codelilas}{RGB}{170,55,241}
+
+\usepackage{listings}
+    %   For including code snippets written directly in this doc
+\lstdefinestyle{bash}{%
+  language=bash,%
+  basicstyle=\footnotesize\ttfamily,%
+  showstringspaces=false,%
+  commentstyle=\color{gray},%
+  keywordstyle=\color{blue},%
+  xleftmargin=0.0in,%
+  xrightmargin=0.0in
+}
+
+\lstdefinestyle{matlab}{%
+  language=Matlab,%
+  basicstyle=\scriptsize\ttfamily,%
+  breaklines=true,%
+  morekeywords={matlab2tikz},%
+  keywordstyle=\color{blue},%
+  morekeywords=[2]{1}, keywordstyle=[2]{\color{black}},%
+  identifierstyle=\color{black},%
+  stringstyle=\color{codelilas},%
+  commentstyle=\color{codegreen},%
+  showstringspaces=false,%
+    %   Without this there will be a symbol in
+    %   the places where there is a space
+  emph=[1]{for,end,break,switch,case},emphstyle=[1]\color{blue},%
+    %   Some words to emphasise
+}
+
+\lstdefinestyle{matlabNoBlue}{%
+  language=Matlab,%
+  basicstyle=\scriptsize\ttfamily,%
+  breaklines=true,%
+  morekeywords={matlab2tikz},%
+  keywordstyle=\color{black},%
+  morekeywords=[2]{1}, keywordstyle=[2]{\color{black}},%
+  identifierstyle=\color{black},%
+  stringstyle=\color{codelilas},%
+  commentstyle=\color{codegreen},%
+  showstringspaces=false,%
+    %   Without this there will be a symbol in
+    %   the places where there is a space
+  emph=[1]{for,end,break,switch,case},emphstyle=[1]\color{blue},%
+    %   Some words to emphasise
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Fixup Code %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% This next line removes the institute parens in the
+    % footer
+\defbeamertemplate*{footline}{my infolines theme}
+{%
+  \leavevmode%
+  \hbox{%
+  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+    \usebeamerfont{author in head/foot}\insertshortauthor~\insertshortinstitute%
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+    \usebeamerfont{title in head/foot}\insertshorttitle
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+    \usebeamerfont{date in head/foot}\insertshortdate{}\hspace*{2em}
+    \insertframenumber{} / \inserttotalframenumber\hspace*{2ex}
+  \end{beamercolorbox}}%
+}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Title Slide %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\title{\textsc{matlab }\\ Practices with Examples}
+\author{Matt Cocci \& Sara Shahanaghi}
+\date{}
+
+\frame{\titlepage}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Table of Contents %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Make table of contents slide
+    % Can use sections and subsections before new
+    % frames/slides which will get put in Table of Contents
+\frame{%
+    \frametitle{Topics and Overview}
+    \tableofcontents
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Presentation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\lstset{style=matlab}
+\section{Data Structures}
+
+  \begin{frame}[fragile]
+    \frametitle{Data Structures}
+
+    Main types
+    \begin{enumerate}
+      \item Numeric Arrays
+        \begin{lstlisting}
+          1:10 [1 2 3 4] ones(4,5) nan(100,2,5)
+        \end{lstlisting}
+      \item Cell Arrays: Heterogeneous(-normative) information
+        \begin{lstlisting}
+  {'jerry', 'elaine', 'kramer', 'george'}
+  {1, 'does', @(x) ~x, {'simply', 'walk', 'into Mordor'}}
+        \end{lstlisting}
+      \item Structs and Struct Arrays: \emph{Named} heterogeneous
+        information
+        \begin{lstlisting}
+          data.series = {'GDPGrowth', 'PCEGrowth'};
+          data.frqcy  = {'q', 'm'};
+          data.values = randn(T,2);
+        \end{lstlisting}
+    \end{enumerate}
+
+	\end{frame}
+
+\subsection{Numeric Arrays}
+  \begin{frame}[fragile]
+    \frametitle{Numeric Arrays: Liberal Use of Pre-Allocation and \text{NaN}s}
+
+    Always initialize numeric arrays before loops, often to
+    \texttt{NaN}:
+    \begin{lstlisting}
+      toPlot = nan(T,Nseries);
+      for t = 1:T
+        toPlot(t) = rand(Nseries,1);
+      end
+    \end{lstlisting}
+    Why?
+    \begin{enumerate}
+      \item Speeds up the code
+      \item Forces you to \emph{name} sizes and dimensions
+      \item Plotting \texttt{NaN}'s is convenient
+    \end{enumerate}
+
+	\end{frame}
+
+  \begin{frame}[fragile]
+    \frametitle{Numeric Arrays: Liberal Use of Pre-Allocation and \text{NaN}s}
+
+    \begin{lstlisting}
+      1947   1   1       NaN      NaN
+      1947   2   1    8.1078      NaN
+      ...               ...      ...
+      2015   4   1    1.2388  0.47595
+      2015   5   1    5.4667   3.8075
+    \end{lstlisting}
+    \pause
+    \begin{figure}
+      \includegraphics[trim={2cm, 5cm, 2cm, 7cm}, clip, scale=0.35]{Examples/Ex1.pdf}
+    \end{figure}
+	\end{frame}
+
+  \begin{frame}[fragile]
+    \frametitle{Numeric Arrays: Liberal Use of Pre-Allocation and \text{NaN}s}
+
+    Using \texttt{NaN}'s:
+    \begin{enumerate}
+      \item Sizes are standard, transparent, unchanging.
+      \item Placement in plots is more precise.
+    \end{enumerate}
+    \begin{figure}
+      \includegraphics[trim={2cm, 5cm, 2cm, 7cm}, clip, scale=0.35]{Examples/Ex1.pdf}
+    \end{figure}
+	\end{frame}
+
+
+
+  \begin{frame}[fragile]
+    \frametitle{Numeric Arrays: Multi-Dimensional Panels}
+
+    Examples of multi-demensional arrays:
+    \begin{enumerate}
+      \item Panel data
+        \begin{lstlisting}
+        nan(Nindividuals,Ncovariates,T)
+        \end{lstlisting}
+      \item Vintage data
+        \begin{lstlisting}
+        nan(Nobsdates,Nseries,Nvintages)
+        \end{lstlisting}
+      \item SEP Data
+        \begin{lstlisting}
+        nan(Npart,Nhorizons,Nvintages,Nvar)
+        \end{lstlisting}
+    \end{enumerate}
+	\end{frame}
+
+
+  \begin{frame}[fragile]
+    \frametitle{Numeric Arrays: Multi-Dimensional Panels}
+
+    Reshaping
+    \begin{enumerate}
+      \item \texttt{reshape(X,[M N K])}
+      \item \texttt{reshape(X,M,N,K)}
+      \item \texttt{reshape(X,M,[],K)}
+    \end{enumerate}
+	\end{frame}
+
+
+  \begin{frame}[fragile]
+    \frametitle{Numeric Arrays: Multi-Dim. Arrays, the Annoying Part}
+
+    Suppose
+    \begin{lstlisting}
+      X = nan(3,3,3);
+      X(:,:,1) = 1;
+      X(:,:,2) = 2;
+      X(:,:,3) = 3;
+    \end{lstlisting}\pause
+    \begin{lstlisting}
+      >> X
+      X(:,:,1) =
+          1     1     1
+          1     1     1
+          1     1     1
+      X(:,:,2) =
+          2     2     2
+          2     2     2
+          2     2     2
+      X(:,:,3) =
+          3     3     3
+          3     3     3
+          3     3     3
+    \end{lstlisting}\pause
+    Will attempt \texttt{X(1,:,:)}
+	\end{frame}
+
+
+  \begin{frame}[fragile]
+    \frametitle{Numeric Arrays: Multi-Dim. Arrays, the Annoying Part}
+
+    \begin{enumerate}
+      \item Without \texttt{squeeze}
+        \begin{lstlisting}
+        >> X(1,:,:)
+        ans(:,:,1) =
+            1     1     1
+        ans(:,:,2) =
+            2     2     2
+        ans(:,:,3) =
+            3     3     3
+        \end{lstlisting}
+
+      \item Check the size
+        \begin{lstlisting}
+        >> size(X(1,:,:))
+        ans =
+            1     3     3
+        \end{lstlisting}\pause
+
+      \item \texttt{squeeze(X(1,:,:))}\pause
+        \begin{lstlisting}
+          >> squeeze(X(1,:,:))
+          ans =
+              1     2     3
+              1     2     3
+              1     2     3
+      \end{lstlisting}
+    \end{enumerate}
+	\end{frame}
+
+
+  \subsection{Cell Arrays}
+
+  \begin{frame}[fragile,shrink=10]
+    \frametitle{Cell Arrays: Easier String Handling}
+
+    Working with strings
+    \begin{enumerate}
+      \item A string is a type \texttt{char} array; each letter is an element
+      \begin{lstlisting}
+        >> class('someString')
+        ans =
+          char
+      \end{lstlisting}\pause
+
+      \item When you want to store an \emph{array} of strings (like a
+      date array), you could stack them:
+      \begin{lstlisting}
+        >> ['2015Q1'; '2015Q2']
+          ans =
+          2015Q1
+          2015Q2
+      \end{lstlisting}\pause
+      Dumb in practice
+      \begin{lstlisting}
+        >> ['abc'; 'defg']
+        Error using vertcat
+        Dimensions of matrices being concatenated are not consistent.
+      \end{lstlisting}\pause
+
+      \item Use cell arrays instead:
+      \begin{lstlisting}
+        >> {'abc'; 'defg'}
+          ans =
+              'abc'
+              'defg'
+      \end{lstlisting}
+    \end{enumerate}
+    Store series names, data headers, date strings, and arrays of
+    strings in cells.
+
+	\end{frame}
+
+
+
+  \begin{frame}[fragile]
+    \frametitle{Cell Arrays: Holding and Unpacking Function Arguments}
+
+    Standard way to pass arguments to a function:
+    \begin{lstlisting}
+      plot(x, y, 'Color', 'blue', 'LineWidth', 2, 'Marker', 'x')
+    \end{lstlisting}\pause
+    Another way
+    \begin{lstlisting}
+      args = {'Color', 'blue', 'LineWidth', 2, 'Marker', 'x'};
+      plot(x, y, args{:})
+    \end{lstlisting}
+    or to only use a subset
+    \begin{lstlisting}
+      plot(x, y, args{1:2})
+    \end{lstlisting}
+	\end{frame}
+
+  \begin{frame}[fragile]
+    \frametitle{Cell Arrays: Holding and Unpacking Function Arguments}
+
+    Why in the world would you ever want to do this?
+    \begin{enumerate}
+      \item Could group sets of options intelligently
+\begin{lstlisting}
+markerOptions = {'Marker', 'x', 'MarkerSize', 5};
+lineOptions = {'LineWidth', 2, 'Color', 'blue'};
+
+plot(x1,y1,markerOptions{:})
+plot(x2,y2,lineOptions{:})
+plot(x3,y3,lineOptions{:},markerOptions{:})
+\end{lstlisting}\pause
+      \item You can define options at the top of a program, rather than
+        burying them in the body of a for loop
+\begin{lstlisting}
+  lgdTitles  = {'Donald', 'Trump'};
+  lgdOptions = {'FontSize', 16, 'Location', 'SouthEast'};
+  for n = 1:ever
+    % Tale of Two Cities, reproduced in comments
+    % ...
+    % 10000000 lines later, stuff gets plotted in gold
+
+    lgd = legend(lgdTitles{:});
+    set(lgd, lgdOptions{:});
+  end
+\end{lstlisting}
+    \end{enumerate}
+
+	\end{frame}
+
+
+  \begin{frame}[fragile]
+    \frametitle{Aside: Varargin}
+
+    You can define a function to take variable arguments
+    \begin{lstlisting}
+      function [fig] = myplot(x,y,varargin)
+
+        plot(x,y,varargin{:})
+
+      end
+
+      myplot(x,y)
+      myplot(x,y,'LineWidth',5)
+    \end{lstlisting}
+    Variable arguments passed to \texttt{myplot} will be stored in a
+    cell named \texttt{varargin}.
+
+    \vspace{10pt}
+    More on varargin and functional programming below.
+	\end{frame}
+
+\subsection{Structs and Struct Arrays}
+
+  \begin{frame}[fragile]
+    \frametitle{Structs: Named Heterogeneous Information}
+
+    Great for creating datasets and grouping metadata with numerical data
+    \begin{lstlisting}
+      d = csvread('data.txt');
+      mydata.values = d(:,2:end);
+      mydata.dates  = datenum(d(:,1));
+      mydata.colums = {'GDP', 'PCE', 'CPI'};
+    \end{lstlisting}\pause
+    \begin{lstlisting}
+      plot(mydata.dates, mydata.values)
+      legend(mydata.columns{:})
+    \end{lstlisting}
+    Can also pass information as a \emph{bundle} to functions, rather
+    than as an unpacked list of arguments
+    \begin{lstlisting}
+      plotData(mydata)
+
+      % Rather than
+      plotData(dates, values, titles, transformation, colors)
+    \end{lstlisting}
+	\end{frame}
+
+
+
+  \begin{frame}[fragile]
+    \frametitle{Structs: Struct Arrays by Example}
+
+    What a typical struct looks like:
+    \lstset{style=matlabNoBlue}
+    \begin{lstlisting}
+    >> fred.latest('GDPC1')
+    ans =
+            info: [1x1 struct]
+          series: 'GDPC1'
+       frequency: 'Q'
+           units: 'lin'
+          pseudo: NaN
+        realtime: 736158
+            date: [273x1 double]
+           value: [273x1 double]
+    \end{lstlisting}\pause
+    \lstset{style=matlab}
+    But this has a dimension---it's 1$\times$1
+	\end{frame}
+
+
+  \begin{frame}[fragile]
+    \frametitle{Structs: Struct Arrays by Example}
+
+      So you can stack them and get an an array of structs:
+      \lstset{style=matlabNoBlue}
+      \begin{lstlisting}
+      >> fred.latest({'GDPC1', 'CPIAUCSL'},0)
+      ans =
+      2x1 struct array with fields:
+          info
+          series
+          frequency
+          units
+          pseudo
+          realtime
+          date
+          value
+      \end{lstlisting}\pause
+      \begin{lstlisting}
+      >> ans(1)
+      ans =
+              info: [1x1 struct]
+            series: 'GDPC1'
+         frequency: 'Q'
+             units: 'lin'
+            pseudo: NaN
+          realtime: 736158
+              date: [273x1 double]
+             value: [273x1 double]
+      \end{lstlisting}
+      \lstset{style=matlab}
+	\end{frame}
+
+  \begin{frame}[fragile]
+    \frametitle{Structs: Struct Arrays by Example}
+
+    Punchline
+    \begin{enumerate}
+      \item Structs are nice.
+      \item Struct arrays are nicer.
+      \item They let have an \emph{array} of bundled data and metadata,
+        and you can create them as simply as
+        \begin{lstlisting}
+          structArray = [struct1; struct2];
+        \end{lstlisting}
+      \item You can loop over them
+        \begin{lstlisting}
+          for t = 1:T
+            plot(   structArray(t).data  )
+            legend( structArray(t).series)
+            title(  structArray(t).title )
+          end
+        \end{lstlisting}
+    \end{enumerate}
+	\end{frame}
+
+  \begin{frame}[fragile]
+    \frametitle{Structs: Avoiding \texttt{eval}}
+
+    Common Stata behavior when you want variables \texttt{x1},
+    \texttt{x2}, \ldots
+    \begin{lstlisting}
+      local x`i' = 1
+    \end{lstlisting}\pause
+    Literal Matlab translation, that you will sometimes see
+    \begin{lstlisting}
+      eval(['x' num2str(i) '= 1])
+    \end{lstlisting}\pause
+    That will produce the string
+    \begin{lstlisting}
+      'x1 = 1'
+    \end{lstlisting}
+    and then evaluate it like you had typed it into the Matlab prompt.\pause
+
+    \vspace{20pt}
+    But \texttt{`eval'} is exactly why we can't have nice things.
+	\end{frame}
+
+
+  \begin{frame}[fragile]
+    \frametitle{Structs: Evaling \texttt{avoid}}
+
+    Better solution is to use structs
+    \begin{lstlisting}
+      for n = 1:N
+        fldName = ['x' num2str(n)];
+        mystruct.(fldName) = n;
+      end
+    \end{lstlisting}\pause
+    Even better: Specify the names explicitly
+    \begin{lstlisting}
+      series = {'GDPC', 'PCE', 'CPI'}
+      for n = 1:length(series)
+        s = series{n};
+        mystruct.(s) = transform(mystruct.(s));
+      end
+    \end{lstlisting}\pause
+    Called ``dynamic referencing'' which is a pretentious name for
+    ``looping over dictionary keys''
+	\end{frame}
+
+
+\section{Functional Programming}
+
+\subsection{Functions vs. Scripts}
+  \begin{frame}[fragile]
+    \frametitle{Functional Programming}
+
+    \begin{centering}
+    \begin{center}
+      \huge
+      \textbf{Short functions not long scripts}
+    \end{center}
+    \end{centering}
+	\end{frame}
+
+
+  \begin{frame}[fragile]
+    \frametitle{Functional Programming}
+
+    Why short functions not long scripts?
+    \begin{enumerate}
+      \item Focus on inputs and outputs
+      \item Easy to understand, maintain, and improve a part of the code
+        without worrying about or screwing up the whole codebase\pause
+      \item You parallelize functions, not scripts\pause
+      \item Easy to error-proof functions\pause
+      \item Easier to debug\pause
+      \item Separate namespaces
+    \end{enumerate}
+	\end{frame}
+
+\subsection{Namespaces}
+
+  \begin{frame}[fragile]
+    \frametitle{Functional Programming: Separate Namespaces}
+
+    Define a function
+    \begin{lstlisting}
+      function [x] = myfcn(x)
+        x = 2*x;
+      end
+    \end{lstlisting}\pause
+    Variable definitions are local
+    \begin{lstlisting}
+      >> myfcn(5)
+      ans =
+          10
+    \end{lstlisting}\pause
+    \lstset{style=matlabNoBlue}
+    \begin{lstlisting}
+      >> x
+      Undefined function or variable 'x'.
+    \end{lstlisting}
+    \lstset{style=matlab}
+	\end{frame}
+
+
+  \begin{frame}[fragile]
+    \frametitle{Functional Programming: Separate Namespaces}
+
+    Define a function
+    \begin{lstlisting}
+      function [x] = myfcn(x)
+        x = 2*x;
+      end
+    \end{lstlisting}\pause
+    There are no side effects
+    \begin{lstlisting}
+      >> x = 5;
+      >> myfcn(x)
+      ans =
+          10
+    \end{lstlisting}\pause
+    \begin{lstlisting}
+      >> x
+      x =
+          5
+    \end{lstlisting}
+	\end{frame}
+
+  \begin{frame}[fragile]
+    \frametitle{Functional Programming: Separate Namespaces}
+
+    Separate namespaces limit side effects:
+    \begin{lstlisting}
+      function [returned] = myfcn(a,b,c,d)
+        % Operations on a,b,c,d
+      end
+    \end{lstlisting}
+    Features:
+    \begin{enumerate}
+      \item Every time you pass an argument to a function
+      \begin{itemize}
+        \item Matlab makes a copy of that input\pause
+        \item Only the function sees that copy. The function acts on
+          and modifies it.\pause
+        \item When the function is done and returns something, it
+          kills and sinks all copies of input arguments in the East
+          River, never to be seen again, like a goddamn mob boss
+      \end{itemize}
+      \item Advantage: You can reuse variable names while ignoring and
+        not impacting other parts of the code \emph{outside} the
+        function.\pause
+      \item Advantage: Narrow focus on inputs/outputs when coding
+    \end{enumerate}
+	\end{frame}
+
+
+\subsection{Debugging}
+
+  \begin{frame}[fragile]
+    \frametitle{Functional Programming: Debugging}
+
+    Placing breakpoints in your functions:
+    \begin{lstlisting}
+      function [returned] = myfcn(x)
+        x = 2*x;
+        keyboard
+        returned = x;
+      end
+    \end{lstlisting}\pause
+    Or, at the Matlab prompt:
+    \begin{lstlisting}
+      >> dbstop in myfcn at 2
+      >> myfcn(2)
+      2     x = 2*x;
+      K>>
+    \end{lstlisting}\pause
+    Other useful commands
+    \begin{enumerate}
+      \item \texttt{dbstep}, \texttt{dbcont}\pause
+      \item \texttt{dbup}, \texttt{dbdown}
+    \end{enumerate}
+	\end{frame}
+
+
+  \begin{frame}[fragile]
+    \frametitle{Functional Programming: \texttt{try}-\texttt{catch}}
+
+    \texttt{try}-\texttt{catch} statements let you error-proof your
+    code:
+    \begin{lstlisting}
+      try
+        y = fcn(x);
+      catch
+        y = NaN;
+      end
+    \end{lstlisting}
+	\end{frame}
+
+
+\subsection{\texttt{feval}, \texttt{arrayfun}, \texttt{cellfun}}
+
+  \begin{frame}[fragile]
+    \frametitle{Functional Programming: Functions as Objects}
+
+    Functions are (X-Men) first-class:
+    \begin{enumerate}
+      \item Functions take arguments\pause
+      \item Functions can be \emph{passed as arguments}
+    \end{enumerate}
+    Example:
+    \begin{lstlisting}
+      >> x = 1:10;
+      >> max(1:10)
+      \end{lstlisting}\pause
+      \vspace{-12pt}
+      \begin{lstlisting}
+      ans =
+          10
+      \end{lstlisting}\pause
+      \vspace{-12pt}
+      \begin{lstlisting}
+      >> min(1:10)
+      ans =
+          1
+    \end{lstlisting}
+	\end{frame}
+
+
+  \begin{frame}[fragile]
+    \frametitle{Functional Programming: Functions as Objects}
+
+    Another way
+    \begin{lstlisting}
+      >> x = 1:10;
+      >> fcns = {'max', 'min'};
+      >> feval(fcns{1}, x);
+      \end{lstlisting}\pause
+      \vspace{-12pt}
+      \begin{lstlisting}
+      ans =
+          10
+      \end{lstlisting}\pause
+      \vspace{-12pt}
+      \begin{lstlisting}
+      >> feval(fcns{2}, x)
+      ans =
+          1
+    \end{lstlisting}
+	\end{frame}
+
+  \begin{frame}[fragile]
+    \frametitle{Functional Programming: Functions as Objects}
+
+    With the \texttt{@} notation
+    \begin{lstlisting}
+      >> x = 1:10;
+      >> fcns = {@max, @min};
+      >> feval(fcns{1}, x);
+      \end{lstlisting}
+      \vspace{-12pt}
+      \begin{lstlisting}
+      ans =
+          10
+      \end{lstlisting}
+      \vspace{-12pt}
+      \begin{lstlisting}
+      >> feval(fcns{2}, x)
+      ans =
+          1
+    \end{lstlisting}
+	\end{frame}
+
+
+  \begin{frame}[fragile]
+    \frametitle{Functional Programming: Functions as Objects}
+
+    Why would you ever want to do this?\pause
+    \vspace{10pt}
+
+    Oftentimes, you want to loop over functions
+    \begin{lstlisting}
+      data = randn(1000,1); % <- Survey data
+      fcns = {'mean', 'median', 'mode', 'min', 'max'};
+    \end{lstlisting}\pause
+    \begin{lstlisting}
+      stats = struct();
+      for n = 1:length(fcns)
+        stats.(fcns{n}) = feval(fcns{n}, data);
+      end
+      \end{lstlisting}\pause
+      \lstset{style=matlabNoBlue}
+      \begin{lstlisting}
+      stats =
+          mean: -0.0326
+        median: -0.0304
+          mode: -3.2320
+           min: -3.2320
+           max: 3.5784
+    \end{lstlisting}
+    \lstset{style=matlab}
+	\end{frame}
+
+  \begin{frame}[fragile]
+    \frametitle{Functional Programming: \texttt{arrayfun} and \texttt{cellfun}}
+
+    \begin{enumerate}
+      \item \texttt{for}-loop: Suggests sequential operations\pause
+      \item \texttt{arrayfun} and \texttt{cellfun}
+        \begin{enumerate}
+          \item Suggest \emph{independent mutations} of array/cell elements
+            \begin{lstlisting}
+              x = [1 2 3 4 5];
+              p = {'alpha', 'beta', 'gamma'};
+            \end{lstlisting}
+          \item Let you flatten out and write readable one-line \texttt{for}-loops.
+        \end{enumerate}\pause
+    \end{enumerate}
+    \vspace{10pt}
+    Example
+      \begin{lstlisting}
+        x = nan(5,1);
+        for n = 1:5
+          x(n) = sqrt(n);
+        end
+      \end{lstlisting}\pause
+      \begin{lstlisting}
+        % Alternative
+        arrayfun(@sqrt, [1 2 3 4 5])
+        ans =
+            1.0000    1.4142    1.7321    2.0000    2.2361
+      \end{lstlisting}
+
+	\end{frame}
+
+  \begin{frame}[fragile]
+    \frametitle{Functional Programming: \texttt{arrayfun} and \texttt{cellfun}}
+
+    Suppose that I had a function \texttt{texify} that slaps a backslash
+    \texttt{\textbackslash} in front of any string passed in.\pause
+
+    \vspace{20pt}
+    \texttt{cellfun} example
+      \begin{lstlisting}
+        cellfun(@texify, {'alpha', 'beta', 'gamma'}, 'un', 0)
+        ans =
+            '\alpha'    '\beta'   '\gamma'
+      \end{lstlisting}\pause
+    Compare that to
+      \begin{lstlisting}
+        p = {'alpha', 'beta', 'gamma'};
+        for n = 1:length(p)
+          p{n} = texify(p{n});
+        end
+      \end{lstlisting}
+	\end{frame}
+
+
+  \begin{frame}[fragile]
+    \frametitle{Functional Programming: Anonymous Functions}
+
+    But not every function deserves an \texttt{m}-file.\pause
+    \begin{lstlisting}
+      function [x] = dumb(x)
+        x = 2*x;
+      end
+    \end{lstlisting}\pause
+    Can define \emph{anonymous functions}
+    \begin{lstlisting}
+      dumb   = @(x) 2*x;
+      texify = @(s) ['\' s];
+    \end{lstlisting}
+    \begin{lstlisting}
+      dumb(3)
+      ans =
+          6
+    \end{lstlisting}
+    \begin{lstlisting}
+      texify('alpha')
+      ans =
+      \alpha
+    \end{lstlisting}
+	\end{frame}
+
+  \begin{frame}[fragile]
+    \frametitle{Functional Programming: Anonymous Functions}
+
+    Called ``anonymous'' because you don't \emph{have} to assign them to
+    anything
+    \begin{lstlisting}
+      cellfun(@(s) ['\' s], {'alpha', 'beta', 'gamma'}, 'un', 0);
+      ans =
+          '\alpha'    '\beta'   '\gamma'
+    \end{lstlisting}\pause
+    Another example
+    \begin{lstlisting}
+      fminbnd(@(x) 4*cos(x), 3, 4)
+    \end{lstlisting}
+	\end{frame}
+
+
+  \begin{frame}[fragile]
+    \frametitle{Functional Programming: Anonymous Functions}
+
+    Finally
+    \begin{enumerate}
+      \item They can also \emph{inherit} things outside the namespace
+        (unlike typical functions defined in \texttt{m}-files)
+        \begin{lstlisting}
+          >> f = 'rbny';
+          >> plotDir  = '/myfolder/Plots/';
+          >> saveName = @(f) [plotDir f '.pdf'];
+          >> saveName('Plot1')
+          ans =
+          /myfolder/Plots/Plot1.pdf
+        \end{lstlisting}\pause
+      \item But they will still have \emph{zero} (count-it: \emph{zero})
+        side-effects:
+        \begin{lstlisting}
+          >> x = 5
+          >> dumb = @(x) 2*x;
+          >> dumb(10)
+          ans =
+              20
+          >> x
+          ans =
+              5
+        \end{lstlisting}
+    \end{enumerate}
+	\end{frame}
+
+  \begin{frame}[fragile]
+    \frametitle{Functional Programming: Anonymous Functions}
+
+    Useful inheritance:
+    \begin{enumerate}
+      \item Functions like \texttt{fminbnd} and \texttt{fminsearch}
+        expect one-argument functions.\pause
+      \item \emph{But} something like a likelihood function requires at
+        least two arguments: parameters and data.\pause
+      \item You can turn \emph{any} function into a one-argument
+        function as follows:
+        \begin{lstlisting}
+      toOptimize = @(theta) myfcn(Y,theta,other,options);
+        \end{lstlisting}
+        This \emph{inherits} the values of \texttt{Y}, \texttt{other},
+        and \texttt{options} from the namespace in which it is defined.
+        They are fixed for \emph{all} values of \texttt{theta}.
+        \vspace{10pt}
+
+        Now you can run
+        \begin{lstlisting}
+          fminbnd(toOptimize, 0, 1);
+        \end{lstlisting}
+    \end{enumerate}
+	\end{frame}
+
+  \begin{frame}[fragile,shrink=10]
+    \frametitle{Functional Programming: Anonymous Functions}
+
+    Inception-level anonymous functions
+    \begin{enumerate}
+      \item Remember that functions are an object. They can be passed
+        around, so they can \emph{also} be returned.
+
+        Example: A call option has payoff $\max\{S-K,0\}$. Can we write
+        an anonymous function that returns this payoff function?\pause
+\begin{lstlisting}
+  call  = @(K) (@(S) max(S-K,0));
+\end{lstlisting}\pause
+\begin{lstlisting}
+  call5 = call(5);
+\end{lstlisting}\pause
+\begin{lstlisting}
+  [1:10; arrayfun(call5, 1:10)]
+  ans =
+      1     2     3     4     5     6     7     8     9    10
+      0     0     0     0     0     1     2     3     4     5
+\end{lstlisting}
+      \item They can also be assigned to structs
+  \begin{lstlisting}
+    >> tform.chg    = @(x) [NaN; diff(x)];
+    >> tform.pctchg = @(x) 100*([NaN; x(2:end)./x(1:end-1)]-1);
+  \end{lstlisting}\pause
+  \begin{lstlisting}
+    >> tform.chg([1:5]')'
+    ans =
+       NaN     1     1     1     1
+    \end{lstlisting}
+    \begin{lstlisting}
+    >> tform.pctchg([1:5]')'
+    ans =
+        NaN  100.0000   50.0000   33.3333   25.0000
+  \end{lstlisting}
+      and then looped-over via dynamic referencing.
+
+    \end{enumerate}
+
+	\end{frame}
+
+
+\section{Parallel Programming}
+
+  \begin{frame}[fragile]
+    \frametitle{Parallel Programming: The Ideal}
+
+    Start with
+    \begin{lstlisting}
+    for n = 1:N
+      results(n) = fcn(args{n,:});
+    end
+    \end{lstlisting}\pause
+    Parallel version
+    \begin{enumerate}
+      \item You need to preallocate
+      \begin{lstlisting}
+        results = nan(N,1);
+      \end{lstlisting}\pause
+      \item You need to open up a parallel pool
+      \begin{lstlisting}
+        poolObject = parpool(Nworkers);
+      \end{lstlisting}\pause
+      \item Modify the code\pause
+        \begin{lstlisting}
+        parfor n = 1:N
+          results(n) = fcn(args{n,:});
+        end
+        \end{lstlisting}\pause
+      \item Close the pool after you're done
+        \begin{lstlisting}
+          delete(poolobj)
+        \end{lstlisting}
+    \end{enumerate}
+
+	\end{frame}
+
+
+  \begin{frame}[fragile]
+    \frametitle{Parallel Programming: The Ideal}
+
+    In summary, from this
+    \begin{lstlisting}
+    results = nan(N,1);
+    for n = 1:N
+      results(n) = fcn(args{n,:});
+    end
+    \end{lstlisting}
+    To this
+    \begin{lstlisting}
+      results    = nan(N,1);
+      poolObject = parpool(Nworkers);
+      parfor n = 1:N
+        results(n) = fcn(args{n,:});
+      end
+      delete(poolobj)
+    \end{lstlisting}
+	\end{frame}
+
+  \begin{frame}[fragile]
+    \frametitle{Parallel Programming: Issues}
+
+    You want the body of a \texttt{parfor} loop to be \emph{function
+    calls}
+    \begin{enumerate}
+      \item Indexing arguments from some numeric or cell array
+      \item Storing the result in a numeric or cell array
+    \end{enumerate}\pause
+    Here's why
+    \begin{lstlisting}
+      parfor n = 1:N
+        a = randn();
+        results(n) = a;
+      end
+    \end{lstlisting}
+    If you run with \texttt{N} parallel workers, Matlab will try to
+    assign a random number to variable \texttt{a}, all at once,
+    \texttt{N} times.
+
+    \vspace{10pt}
+    Functions get around this because each of the \texttt{N} iterations
+    gets its \emph{own namespace}. There's no confusion of variable
+    values across iterations.
+
+	\end{frame}
+
+
+  \begin{frame}[fragile, shrink=20]
+    \frametitle{Parallel Programming: Issues}
+
+    One annoying thing: if you run something in parallel and it errors
+    out, fixing then rerunning your code will throw an error if that
+    code tries to open up a parallel pool again.\pause
+
+    \vspace{10pt}
+    Here's a way around that
+    \begin{lstlisting}
+function [ poolobj ] = poolsetup(parworkers, varargin)
+% POOLSETUP - Wrapper and easier way to set up a parallel pool.
+%
+% First checks if one is open already. If so, do nothing and
+% just return the object for that parallel session. If not,
+% open up a pool.
+%
+% Can also pass in files to add to the session.
+
+  poolcheck = gcp('nocreate');
+  if isempty(poolcheck)
+    poolobj = parpool(parworkers); % Open up a pool
+  else
+    poolobj = poolcheck;
+  end
+  if nargin > 1
+    addAttachedFiles(poolobj, varargin{1});
+  end
+end
+    \end{lstlisting}
+    This will either find your open session and use it, or start a new
+    one. Use it like
+    \begin{lstlisting}
+      poolObject = poolsetup(parworkers); % Rather than  '= parpool(parworkers)'
+    \end{lstlisting}
+
+	\end{frame}
+
+
+  \begin{frame}[fragile, shrink=20]
+    \frametitle{Parallel Programming: Issues}
+
+    Another annoying thing: One bad iteration kills the whole parallel
+    loop.\pause
+
+    \vspace{10pt}
+    Here's a way around that
+    \begin{lstlisting}
+% ERRORPROOF - To wrap functions so that any errors don't kill a program
+function [returned, errored_out] = errorproof(fcn, varargin)
+
+try
+  returned = feval(fcn, args{:});;
+  errored_out = 0;
+catch
+  returned = lasterror();
+  errored_out = 1;
+end
+    \end{lstlisting}
+    Rewrite \texttt{parfor} loops from this
+    \begin{lstlisting}
+      parfor n = 1:N
+        results(n) = fcn(args{n,:});
+      end
+    \end{lstlisting}
+    to this
+    \begin{lstlisting}
+      parfor n = 1:N
+        [results{n}, errs(n)] = errorproof(@fcn, args{n,:});
+      end
+    \end{lstlisting}
+    This will store the last error message along an indicator as to
+    whether the function errored out.
+
+	\end{frame}
+
+	%\frame{
+			%\frametitle{Slide with Text}
+
+			%You can use lists as usual:
+			%\begin{itemize}
+		%\item You can even \pause add breaks
+		%\item Anytime you write ``\textbackslash pause'', two slides will
+				%be generated \pause
+		%\item One with everything up to pause only.
+		%\item Another with everything on the slide, even
+				%after pause
+			%\end{itemize}
+	%}
+
+
+
+	%\frame{
+			%\frametitle{Adding Some Color}
+
+        %Maybe you want to highlight some text and really make it
+        %\textcolor{red}{stand out}.
+	%}
+
+	%\frame{
+			%\frametitle{Highlighting Certain Points}
+
+        %Or maybe, you want to gray out certain text to highlight other
+        %points.
+        %\usebeamercolor{dull text}
+        %\begin{itemize}
+            %\item \alert<+>{You do that by defining the color of ``dull''
+                %text and ``alerted'' text in the preamble}
+            %\item \alert<+>{Then you set the color to dull text, adding
+                %``\textbackslash alert\textless\texttt{+}\textgreater''
+                %tags and enclosing within brackets
+                %the text to be ``alert.''}
+        %\end{itemize}
+        %\pause
+        %Each ``\textbackslash alert\textless\texttt{+}\textgreater\{text\}''
+        %also adds pauses between the dull and alert
+        %text.
+	%}
+
+
+\end{document}
+
